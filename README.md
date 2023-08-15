@@ -34,7 +34,7 @@ This app is built with Node.js and Express.js. It provides APIs to handle user a
 Clone the repository:
 
 ```bash
-git clone https://github.com/EmmyJay3877/socialmedia_app
+git clone https://github.com/EmmyJay3877/socialmedia_app.git
 ```
     
 Install the dependencies:
