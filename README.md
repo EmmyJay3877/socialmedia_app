@@ -7,7 +7,7 @@ This app is built with Node.js and Express.js. It provides APIs to handle user a
 
 
 
-## Features
+## 🧐 Features
 
 - User registration and login with JWT authentication
 - Well documented API endpoints for post, comment and user interactions
