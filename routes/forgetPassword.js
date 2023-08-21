@@ -5,4 +5,6 @@ const tryCatch = require('./../utils/tryCatch');
 
 router.post('/', tryCatch(passwordController.forgetPassword));
 
+router.put('/:token', tryCatch(passwordController.resetPassword));
+
 module.exports = router;

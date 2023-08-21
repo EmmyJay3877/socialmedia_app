@@ -5,7 +5,10 @@ const tryCatch = require('../../utils/tryCatch');
 
 router.route('/')
     .post(tryCatch(followingController.createFollowing))
-    .delete(tryCatch(followingController.deleteFollowing))
+    .get(tryCatch(followingController.getYourFollowing))
 
+router.route('/:id')
+    .get(tryCatch(followingController.getFollowingOfUser))
+    .delete(tryCatch(followingController.deleteFollowing))
 
 module.exports = router;

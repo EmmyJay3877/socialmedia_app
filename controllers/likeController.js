@@ -1,13 +1,22 @@
 const Like = require('../model/Like');
 const Post = require('../model/Post');
 const Comment = require('../model/Comment');
+const CustomError = require('../utils/customError');
+const Redis = require('redis');
+const redisClient = Redis.createClient();
+
+redisClient.connect();
+
+const EXPIRATION = 20
 
 
 const createLike = async (req, res) => {
     const { postId } = req.body;
-    if (!postId) throw new Error('Like is empty');
+    if (!postId) throw new CustomError('Like is empty', 403);
 
-    // create a new like
+    const like = await Like.findOne({ postId }).exec();
+    if (like && (like.profileId.toString() === req.user.id)) throw new CustomError("You can't like twice", 403);
+
     const newLike = await Like.create({
         // postId can either be the Id of a comment, post or reply.
         "postId": postId,
@@ -42,31 +51,53 @@ const createLike = async (req, res) => {
     }
 }
 
-const deleteLike = async (req, res) => {
-    const { likeId, postId } = req.body;
-    if (!likeId || !postId) throw new Error('Bad Request');
+const getTotalLikes = async (req, res) => { // on a post
+    const postId = req.params.id;
+    if (!postId) throw new CustomError('Bad Request', 403);
 
-    const like = await Like.findOne({ _id: likeId }).exec();
-    if (!like) throw new Error(`No Like matches ID ${likeId}`);
+    // check if we already have a cache.
+    const result = await redisClient.get(`like?id=${postId}`);
+    if (result !== undefined && result !== null) return res.json(JSON.parse(result));
+
+    let totalLikes = {};
+
+    const post = await Post.findOne({ _id: postId }).exec();
+    if (!post) throw new CustomError(`Post not found`, 404);
+
+    totalLikes.likes = post.likes.length;
+
+    // save in redis cache.
+    redisClient.setEx(`like?id=${postId}`, EXPIRATION, JSON.stringify(totalLikes));
+
+    res.json(totalLikes);
+};
+
+const deleteLike = async (req, res) => {
+    const postId = req.params.id;
+    if (!postId) throw new CustomError('Bad Request', 403);
+
+    const like = await Like.findOne({ postId }).exec();
+    if (!like) throw new CustomError(`Like was not found`, 404);
 
     // delete a like
     const result = await like.deleteOne();
 
     if (result) {
         if (req.url.includes('/reply/likes')) { // if it's a reply
-            const replyUpdate = await Comment.updateOne({ _id: postId }, { $pull: { likes: likeId } });
-            if (replyUpdate.matchedCount > 0 && replyUpdate.modifiedCount > 0) return res.status(200).json({ 'success': 'Like deleted sucessfully' })
+            const replyUpdate = await Comment.updateOne({ _id: postId }, { $pull: { likes: like._id } });
+            if (replyUpdate.matchedCount > 0 && replyUpdate.modifiedCount > 0) return res.status(200).json({ 'success': `${req.user.username} just unliked a reply` })
         } else if (req.url.includes('/comment/likes')) { // if it's a comment
-            const commentUpdate = await Comment.updateOne({ _id: postId }, { $pull: { likes: likeId } });
-            if (commentUpdate.matchedCount > 0 && commentUpdate.modifiedCount > 0) return res.status(200).json({ 'success': 'Like deleted sucessfully' })
+            const commentUpdate = await Comment.updateOne({ _id: postId }, { $pull: { likes: like._id } });
+            if (commentUpdate.matchedCount > 0 && commentUpdate.modifiedCount > 0) return res.status(200).json({ 'success': `${req.user.username} just unliked a comment` })
         } else { // if it's a post
-            const postUpdate = await Post.updateOne({ _id: postId }, { $pull: { likes: likeId } });
-            if (postUpdate.matchedCount > 0 && postUpdate.modifiedCount > 0) return res.status(200).json({ 'success': 'Like deleted sucessfully' })
+            const postUpdate = await Post.updateOne({ _id: postId }, { $pull: { likes: like._id } });
+            if (postUpdate.matchedCount > 0 && postUpdate.modifiedCount > 0) return res.status(200).json({ 'success': `${req.user.username} just unliked a post` })
         }
     }
 }
 
 module.exports = {
     createLike,
+    getTotalLikes,
     deleteLike
 }

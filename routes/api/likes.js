@@ -5,6 +5,9 @@ const tryCatch = require('../../utils/tryCatch');
 
 router.route('/')
     .post(tryCatch(likeController.createLike))
+
+router.route('/:id')
+    .get(tryCatch(likeController.getTotalLikes))
     .delete(tryCatch(likeController.deleteLike))
 
 

@@ -26,14 +26,14 @@ const getAllUsers = async (req, res) => {
 };
 
 const getUser = async (req, res) => {
-    if (!req?.params?.id) throw new Error('User ID required.');
+    if (!req?.params?.id) throw new CustomError('User ID required.', 403);
 
     // check if we already have a cache.
     const result = await redisClient.get(`users?id=${req.params.id}`);
     if (result !== undefined && result !== null) return res.json(JSON.parse(result));
 
     const user = await User.findOne({ _id: req.params.id }).exec();
-    if (!user) throw new Error(`No User matches ID ${req.params.id}`);
+    if (user === null) throw new CustomError(`No User matches ID ${req.params.id}`, 404);
 
     // save in redis cache.
     redisClient.setEx(`users?id=${req.params.id}`, EXPIRATION, JSON.stringify(user));
@@ -51,7 +51,7 @@ const filterObj = (obj, ...allowedFields) => {
 }
 
 const updateUser = async (req, res) => {
-    const user = await User.findOne({ _id: req.user._id }).exec();
+    const user = await User.findOne({ username: req.user.username }).exec();
     if (!user) throw new CustomError(`Unauthorized to perform this action`, 401);
 
     if (req.body?.username) {

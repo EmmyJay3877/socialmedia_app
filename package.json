@@ -26,8 +26,10 @@
     "nodemailer": "^6.9.3",
     "nodemon": "^2.0.22",
     "redis": "^4.6.6",
+    "swagger-ui-express": "^5.0.0",
     "validator": "^13.9.0",
-    "xss-clean": "^0.1.4"
+    "xss-clean": "^0.1.4",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.2",

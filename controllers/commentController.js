@@ -1,6 +1,7 @@
 const Comment = require('../model/Comment');
 const Post = require('../model/Post');
 const Redis = require('redis');
+const CustomError = require('../utils/customError');
 const redisClient = Redis.createClient();
 
 redisClient.connect();
@@ -63,6 +64,27 @@ const getComments = async (req, res) => {
     res.json(comments);
 }
 
+const getTotalLikes = async (req, res) => { // psotId will represent comment and reply Id
+    const postId = req.params.id;
+    if (!postId) throw new CustomError('Bad Request', 403);
+
+    // check if we already have a cache.
+    const result = await redisClient.get(`like?id=${postId}`);
+    if (result !== undefined && result !== null) return res.json(JSON.parse(result));
+
+    let totalLikes = {};
+
+    const post = await Comment.findOne({ _id: postId }).exec();
+    if (!post) throw new CustomError(`Post not found`, 404);
+
+    totalLikes.likes = post.likes.length;
+
+    // save in redis cache.
+    redisClient.setEx(`like?id=${postId}`, EXPIRATION, JSON.stringify(totalLikes));
+
+    res.json(totalLikes);
+};
+
 const getComment = async (req, res) => {
     if (!req?.params?.id) throw new Error('Bad Request');
 
@@ -87,16 +109,36 @@ const getCommentReplies = async (req, res) => {
     if (result !== undefined && result !== null) return res.json(JSON.parse(result));
 
     const comment = await Comment.findOne({ _id: req.params.id }).exec();
-    if (!comment) throw new Error(`No comment with ID ${req.params.id}`);
+    if (!comment) throw new CustomError(`No comment with ID ${req.params.id}`, 404);
 
     const replies = await Comment.find({ postId: comment._id });
-    if (replies.length < 1) throw new Error(`Comment with ID ${comment._id} has no reply.`);
+    if (replies.length < 1) throw new CustomError(`Comment with ID ${comment._id} has no reply.`, 204);
 
     // save in redis cache.
     redisClient.setEx(`commentReplies?id=${req.params.id}`, EXPIRATION, JSON.stringify(replies));
 
     res.json(replies);
 }
+
+const getTotalReplies = async (req, res) => {
+    if (!req?.params?.id) throw new CustomError('Comment id is required', 403)
+
+    // check if we already have a cache
+    const result = await redisClient.get(`totalCommentReplies?id=${req.params.id}`);
+    if (result !== undefined && result !== null) return res.json(JSON.parse(result));
+    let totalReplies = {};
+
+    // check if we have the comment in our db
+    const comment = await Comment.findOne({ _id: req.params.id }).exec();
+    if (!comment) throw new CustomError('Not found', 404);
+
+    totalReplies.replies = comment.replies.length;
+
+    // save in redis cache.
+    redisClient.setEx(`totalCommentReplies?id=${req.params.id}`, EXPIRATION, JSON.stringify(totalReplies));
+
+    res.json(totalReplies);
+};
 
 const deleteComment = async (req, res) => {
     if (!req?.params?.id) throw new Error('Bad Request');
@@ -129,7 +171,9 @@ const deleteComment = async (req, res) => {
 module.exports = {
     createComment,
     deleteComment,
+    getTotalLikes,
     getComments,
+    getTotalReplies,
     getComment,
     getCommentReplies
 }

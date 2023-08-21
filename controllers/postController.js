@@ -63,7 +63,7 @@ const getPost = async (req, res) => {
 };
 
 const getPostComments = async (req, res) => {
-    if (!req?.params?.id) throw new Error('Post id is required')
+    if (!req?.params?.id) throw new customError('Post id is required', 403)
 
     // check if we already have a cache
     const result = await redisClient.get(`postComments?id=${req.params.id}`);
@@ -71,10 +71,10 @@ const getPostComments = async (req, res) => {
 
     // check if we have the post in our db
     const post = await Post.findOne({ _id: req.params.id }).exec();
-    if (!post) throw new Error('Not found');
+    if (!post) throw new customError('Not found', 404);
 
     const postComments = await Comment.find({ postId: req.params.id });
-    if (postComments.length < 1) throw new Error(`Post with ID ${req.params.id} has no comment.`);
+    if (postComments.length < 1) throw new customError(`Post with ID ${req.params.id} has no comment.`, 204);
 
     // save in redis cache.
     redisClient.setEx(`postComments?id=${req.params.id}`, EXPIRATION, JSON.stringify(postComments));
@@ -82,19 +82,40 @@ const getPostComments = async (req, res) => {
     res.json(postComments);
 };
 
+const getTotalComments = async (req, res) => {
+    if (!req?.params?.id) throw new customError('Post id is required', 403)
+
+    // check if we already have a cache
+    const result = await redisClient.get(`totalPostComments?id=${req.params.id}`);
+    if (result !== undefined && result !== null) return res.json(JSON.parse(result));
+
+    let totalComments = {};
+
+    // check if we have the post in our db
+    const post = await Post.findOne({ _id: req.params.id }).exec();
+    if (!post) throw new customError('Not found', 404);
+
+    totalComments.comments = post.comments.length;
+
+    // save in redis cache.
+    redisClient.setEx(`totalPostComments?id=${req.params.id}`, EXPIRATION, JSON.stringify(totalComments));
+
+    res.json(totalComments);
+};
+
 const getUserPosts = async (req, res) => {
-    if (!req?.user?._id) throw new Error('User ID required.');
+    if (!req?.user?.id) throw new customError('User ID required.', 403);
 
     // check if we have the user in our db
-    const user = await User.findOne({ _id: req.user._id }).exec();
-    if (!user) throw new Error('Unauthorized');
+    const user = await User.findOne({ _id: req.user.id }).exec();
+    if (!user) throw new customError('Unauthorized', 401);
 
     // check if already have a cache.
     const result = await redisClient.get(`userPosts?profile=${req.user._id}`);
     if (result !== undefined && result !== null) return res.json(JSON.parse(result));
 
     const userPosts = await Post.find({ profile: req.user._id });
-    if (userPosts.length < 1) throw new Error(`User with ID ${req.user._id} has no post.`);
+    if (userPosts.length < 1) throw new customError(`User with ID ${req.user._id} has no post.`, 404);
 
     // save in redis cache
     redisClient.setEx(`userPosts?profile=${req.user._id}`, EXPIRATION, JSON.stringify(userPosts));
@@ -103,10 +124,10 @@ const getUserPosts = async (req, res) => {
 };
 
 const deletePost = async (req, res, next) => {
-    if (!req?.params?.id) throw new Error('Post id is required');
+    if (!req?.params?.id) throw new customError('Post id is required', 403);
 
     const post = await Post.findOne({ _id: req.params.id }).exec();
-    if (!post) throw new Error(`No Post matches ID ${req.params.id}`);
+    if (!post) throw new customError(`No Post matches ID ${req.params.id}`, 404);
 
     // delete all the comments document related to this post
     const postComments = await Comment.find({ postId: post._id });
@@ -132,6 +153,7 @@ module.exports = {
     getAllPosts,
     getPost,
     getUserPosts,
+    getTotalComments,
     deletePost,
     getPostComments,
 }

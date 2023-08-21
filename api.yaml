@@ -1,0 +1,761 @@
+swagger: "2.0"
+info:
+  title: Social Media API
+  description: API documentation
+  version: 1.0.0
+
+schemes:
+  - http
+  - https
+
+
+paths:
+  /register:
+    post:
+      summary: SignUp a User
+      operationId: Register
+      tags:
+        - Users
+      produces:
+        - application/json
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: User
+          schema:
+            $ref: "#/definitions/UserSignup"
+      responses:
+        201:
+          description: OK
+
+  /login:
+    post:
+      summary: Login a User
+      operationId: Login
+      tags:
+        - Users
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: User
+          schema:
+            $ref: "#/definitions/UserLogin"
+      security: []
+
+      responses:
+        200:
+          description: >
+            Successfully Authenticated.
+  
+  /refresh:
+    get:
+      summary: Get new AccessToken
+      operationId: RefreshToken
+      tags: 
+        - Users
+      security:
+        - cookieAuth: []
+      responses:
+        200:
+          description: OK
+
+  /logout:
+    get:
+      summary: Logout User
+      operationId: Logout
+      tags:
+        - Users
+      responses:
+        200:
+          description: OK
+
+  /forgetPassword:
+    post:
+      summary: Send reset email
+      operationId: ForgetPassword
+      tags:
+        - Users
+      parameters:
+        - in: body
+          name: email
+          required: true
+          schema:
+            $ref: "#definitions/Email"
+      responses:
+        200:
+          description: OK
+
+  /resetPassword/{token}:
+    put:
+      summary: Reset forgotten Password
+      description: Use the forgetPassword route above to send a token in your registered email address
+      operationId: ResetPassword
+      tags: [Users]
+      parameters:
+        - $ref: "#/parameters/tokenParam"
+        - in: body
+          name: passwordReset
+          required: true
+          schema:
+            $ref: "#/definitions/PasswordReset"
+      responses:
+        200:
+          description: OK
+
+  /users:
+    get:
+      summary: Get all users
+      operationId: AllUsers
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+  
+  /users/{id}:
+    get:
+      summary: Get a user
+      operationId: User
+      tags:
+        - Users
+      parameters:
+        - $ref: "#/parameters/idParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+    delete:
+      summary: Delete a user
+      operationId: DeleteUser
+      tags:
+        - Users
+      parameters:
+        - $ref: "#/parameters/idParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /users/updateMe:
+    put:
+      summary: Update your username and re-login to get a new valid accessToken
+      operationId: UpdateUser
+      tags:
+        - Users
+      parameters:
+        - in: body
+          name: username
+          required: true
+          schema:
+            $ref: "#/definitions/Username"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+  
+  /users/updateMyPassword:
+    put:
+      summary: Update User Password
+      operationId: UpdatePassword
+      tags:
+        - Users
+      parameters:
+        - in: body
+          name: passwordUpdate
+          required: true
+          schema:
+            $ref: "#/definitions/Password"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /posts:
+    get:
+      summary: Get all posts
+      operationId: AllPosts
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+    post:
+      summary: Create a post
+      operationId: CreatePost
+      tags:
+        - Posts
+      parameters:
+        - in: body
+          name: Post
+          required: true
+          schema:
+            $ref: "#/definitions/Post"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /posts/{id}:
+    get:
+      summary: Get a Post
+      operationId: SinglePost
+      tags:
+        - Posts
+      parameters:
+        - $ref: "#/parameters/postParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+    delete:
+      summary: Delete a Post
+      operationId: DeletePost
+      tags:
+        - Posts
+      parameters:
+        - $ref: "#/parameters/postParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /posts/user/posts:
+    get:
+      summary: Get User's Posts
+      operationId: UsersPosts
+      tags:
+        - Posts
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /posts/comments/{id}:
+    get:
+      summary: Get Post's comments
+      operationId: PostComments
+      tags:
+        - Posts
+      parameters:
+        - $ref: "#/parameters/postParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /posts/post/{id}:
+    get:
+      summary: Get Total comments on a Post
+      operationId: TotalComments
+      tags: [Posts]
+      parameters:
+        - $ref: "#/parameters/postParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /likes:
+    post:
+      summary: Like a Post
+      operationId: LikePost
+      tags:
+        - Posts
+      parameters:
+        - in: body
+          name: Post
+          description: Post's ID
+          required: true
+          schema:
+            $ref: "#/definitions/Like"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+    
+  /likes/{id}:
+    get:
+      summary: Get the total likes on a post
+      operation: TotalLikes
+      tags:
+        - Posts
+      parameters:
+        - $ref: "#/parameters/postParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+    delete:
+      summary: Unlike a Post
+      operationId: UnlikePost
+      tags:
+        - Posts
+      parameters:
+        - $ref: "#/parameters/postParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+    
+  /comments:
+    get:
+      summary: Get All Comments
+      operationId: AllComments
+      tags:
+        - Comments
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+    post:
+      summary: Comment on a Post
+      operationId: CreateComment
+      tags:
+        - Comments
+      parameters:
+        - in: body
+          name: Comment
+          required: true
+          schema:
+            $ref: "#/definitions/Comment"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /comments/{id}:
+    get:
+      summary: Get a Comment
+      operationId: SingleComment
+      tags:
+        - Comments
+      parameters:
+        - $ref: "#/parameters/commentParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+    delete:
+      summary: Delete a Comment
+      operationId: DeleteComment
+      tags:
+        - Comments
+      parameters:
+        - $ref: "#/parameters/commentParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /comments/replies:
+    post:
+      summary: Reply a comment
+      operationId: ReplyComment
+      tags:
+        - Comments
+      parameters:
+        - in: body
+          name: Reply
+          required: true
+          schema:
+            $ref: "#/definitions/Comment"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /comments/replies/{id}:
+    get:
+      summary: Get Comment Replies
+      operationId: SingleReply
+      tags:
+        - Comments
+      parameters:
+        - $ref: "#/parameters/commentParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+    delete:
+      summary: Delete a Reply
+      operationId: DeleteReply
+      tags:
+        - Comments
+      parameters:
+        - $ref: "#/parameters/replyParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /comments/reply/likes:
+    post:
+      summary: Like a Reply
+      operationId: LikeReply
+      tags:
+        - Comments
+      parameters:
+        - in: body
+          name: Reply
+          description: Reply's ID
+          required: true
+          schema:
+            $ref: "#/definitions/Like"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /comments/reply/likes/{id}:
+    get:
+      summary: Get the total likes on a reply
+      operation: ReplyLikes
+      tags:
+        - Comments
+      parameters:
+        - $ref: "#/parameters/replyParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+    delete:
+      summary: Unlike a Reply
+      operationId: UnlikeReply
+      tags:
+        - Comments
+      parameters:
+        - $ref: "#/parameters/replyParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /comments/comment/likes:
+    post:
+      summary: Like a Comment
+      operationId: LikeComment
+      tags:
+        - Comments
+      parameters:
+        - in: body
+          name: Comment
+          description: Comments's ID
+          required: true
+          schema:
+            $ref: "#/definitions/Like"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /comments/comment/likes/{id}:
+    get:
+      summary: Get the total likes on a Comment
+      operation: CommentLikes
+      tags:
+        - Comments
+      parameters:
+        - $ref: "#/parameters/commentParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+    delete:
+      summary: Unlike a Comment
+      operationId: UnlikeComment
+      tags:
+        - Comments
+      parameters:
+        - $ref: "#/parameters/commentParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /comments/totalReplies/{id}:
+    get:
+      summary: Get the total replies on a comment
+      operationId: TotalReplies
+      tags: [Comments]
+      parameters:
+        - $ref: "#/parameters/commentParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /following:
+    post:
+      summary: Follow a User
+      operationId: FollowUser
+      tags:
+        - Users
+      parameters:
+        - in: body
+          name: User ID
+          required: true
+          schema:
+            $ref: "#/definitions/Following"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+    get:
+      summary: View your following status
+      operationId: Following
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+  /following/{id}:
+    get:
+      summary: View a User's following status
+      operationId: UserFollowing
+      tags: [Users]
+      parameters:
+        - in: path
+          name: id
+          type: string
+          required: true
+          description: The User's ID
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+
+    delete:
+      summary: Unfollow a User
+      operationId: UnfollowUser
+      tags: [Users]
+      parameters:
+        - $ref: "#/parameters/followingParams"
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: OK
+          
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: jwt 
+
+securityDefinitions:
+  bearerAuth:
+    type: apiKey
+    name: Authorization
+    in: header
+
+parameters:
+  idParams:
+    in: path
+    name: id
+    required: true
+    type: string
+    minimum: 1
+    description: The User ID
+
+  postParams:
+    in: path
+    name: id
+    required: true
+    type: string
+    minimum: 1
+    description: The Post's ID
+
+  commentParams:
+    in: path
+    name: id
+    required: true
+    type: string
+    minimum: 1
+    description: The Comment's ID
+
+  replyParams:
+    in: path
+    name: id
+    required: true
+    type: string
+    minimum: 1
+    description: The Reply's ID
+
+  followingParams:
+    in: path
+    name: id
+    required: true
+    type: string
+    minimum: 1
+    description: ID of the user you want to unfollow
+  
+  tokenParam:
+    in: path
+    name: token
+    required: true
+    type: string
+    description: The token sent to your email
+
+
+definitions:
+  UserSignup:
+    type: object
+    properties:
+      username:
+        type: string
+        minLength: 4
+        maxLength: 20
+      email:
+        type: string
+      password:
+        type: string
+        minLength: 8
+      passwordConfirm:
+        type: string
+      role: 
+        type: string
+    required:
+      - username
+      - email
+      - password
+      - passwordConfirm
+
+  UserLogin:
+    type: object
+    properties:
+      username:
+        type: string
+        minLength: 4
+        maxLength: 20
+      password:
+        type: string
+        minLength: 8
+    required:
+      - username
+      - password
+
+  Post:
+    type: object
+    properties:
+      text:
+        type: string
+      image:
+        type: string
+    required:
+      - text
+
+  Comment:
+    type: object
+    properties:
+      postId:
+        type: string
+      text:
+        type: string
+    required:
+      - postId
+      - text
+
+  Like:
+    type: object
+    properties:
+      postId:
+        type: string
+    required:
+      - postId
+
+  Following:
+    type: object
+    properties:
+      followingId:
+        type: string
+        example: The ID of the User you want to follow
+    required:
+      - followingId
+
+  Email:
+    type: object
+    properties:
+      email: 
+        type: string
+    required:
+      - email
+
+  Username:
+    type: object
+    properties:
+      username:
+        type: string
+    required: [username]
+
+  Password:
+    type: object
+    properties:
+      passwordCurrent:
+        type: string
+      password:
+        type: string
+        minLength: 8
+      passwordConfirm:
+        type: string
+        minLength: 8
+    required: [passwordCurrent, password, passwordConfirm]
+
+  PasswordReset:
+    type: object
+    properties:
+      password:
+        type: string
+        minLength: 8
+      passwordConfirm:
+        type: string
+        minLength: 8
+    required: [passwordCurrent, password, passwordConfirm]

@@ -1,6 +1,9 @@
 require('dotenv').config()
 const createServer = require('./config/server');
 const app = createServer();
+const swaggerUI = require('swagger-ui-express');
+const YAML = require('yamljs');
+const swaggerjsDocs = YAML.load('./api.yaml');
 const rateLimit = require('express-rate-limit');
 const corsOptions = require('./config/corsOptions')
 const cors = require('cors');
@@ -40,6 +43,9 @@ const loginLimiter = rateLimit({
     message: 'Too many login attempts, please try again in few minutes!'
 });
 
+// swagger ui api docs
+app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerjsDocs));
+
 // limit requests from same IP
 app.use(limiter);
 
@@ -71,10 +77,11 @@ app.use(cookieParser());
 
 // routes
 app.use('/register', require('./routes/register'));
-appee.use('/login', require('./routes/auth'));
+app.use('/login', require('./routes/auth'));
 app.use('/refresh', require('./routes/refresh'));
 app.use('/logout', require('./routes/logout'));
 app.use('/forgetPassword', require('./routes/forgetPassword'));
+app.use('/resetPassword', require('./routes/forgetPassword'));
 
 app.use(verifyJWT);
 app.use('/posts', require('./routes/api/posts'));

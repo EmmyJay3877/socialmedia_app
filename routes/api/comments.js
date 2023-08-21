@@ -21,10 +21,19 @@ router.route('/replies/:id')
 
 router.route('/reply/likes')
     .post(tryCatch(likeController.createLike))
+
+router.route('/reply/likes/:id')
+    .get(tryCatch(commentController.getTotalLikes))
     .delete(tryCatch(likeController.deleteLike))
 
 router.route('/comment/likes')
     .post(tryCatch(likeController.createLike))
+
+router.route('/comment/likes/:id')
+    .get(tryCatch(commentController.getTotalLikes))
     .delete(tryCatch(likeController.deleteLike))
+
+router.route('/totalReplies/:id')
+    .get(tryCatch(commentController.getTotalReplies))
 
 module.exports = router;

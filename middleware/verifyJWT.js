@@ -19,6 +19,6 @@ const verifyJWT = tryCatch(async (req, res, next) => {
     // Grant access to protected routes
     req.user = currentUser;
     next();
-})
+});
 
 module.exports = verifyJWT;

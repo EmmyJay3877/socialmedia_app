@@ -8,8 +8,6 @@ const passwordController = require('../../controllers/passwordController');
 router.route('/')
     .get(tryCatch(userController.getAllUsers))
 
-router.put('/resetPassword/:token', tryCatch(passwordController.resetPassword));
-
 router.put('/updateMyPassword', tryCatch(userController.updatePassword));
 
 router.put('/updateMe', tryCatch(userController.updateUser))

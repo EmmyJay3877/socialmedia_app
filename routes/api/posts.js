@@ -12,10 +12,13 @@ router.route('/:id')
     .get(tryCatch(postController.getPost))
     .delete(tryCatch(postController.deletePost))
 
-router.route('/user')
+router.route('/user/posts')
     .get(tryCatch(postController.getUserPosts))
 
 router.route('/comments/:id')
     .get(tryCatch(postController.getPostComments))
+
+router.route('/post/:id')
+    .get(tryCatch(postController.getTotalComments))
 
 module.exports = router;
