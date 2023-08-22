@@ -7,7 +7,7 @@ const createServer = () => {
     app.use(express.urlencoded({ extended: false }));
 
     // built-in middleware for json / body parser, reading data from body into req.body
-    app.use(express.json({ limit: '10kb' }));
+    app.use(express.json({ limit: '5mb' }));
 
     return app;
 };

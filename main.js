@@ -9,6 +9,7 @@ const corsOptions = require('./config/corsOptions')
 const cors = require('cors');
 const helmet = require('helmet');
 const mongoose = require('mongoose');
+const fileUpload = require('express-fileupload');
 const connectDB = require('./config/dbConn');
 const cookieParser = require('cookie-parser');
 const mongoSanitize = require('express-mongo-sanitize');
@@ -26,6 +27,15 @@ process.on('uncaughtException', err => {
     console.log('UNHANDLED EXCEPTION 🔥 Shutting Down!!!')
     process.exit(1);
 });
+
+// handle fileupload
+app.use(
+    fileUpload({
+        limits: {
+            fileSize: 5 * 1024 * 1024 // Around 5MB
+        },
+        useTempFiles: true
+    }));
 
 // set security http headers
 app.use(helmet());

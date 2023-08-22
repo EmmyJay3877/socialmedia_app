@@ -4,11 +4,6 @@ info:
   description: API documentation
   version: 1.0.0
 
-schemes:
-  - http
-  - https
-
-
 paths:
   /register:
     post:
@@ -196,12 +191,17 @@ paths:
       operationId: CreatePost
       tags:
         - Posts
+      consumes:
+        - multipart/form-data
       parameters:
-        - in: body
-          name: Post
+        - in: formData
+          name: text
+          description: Write Your Post Here
+          type: string
           required: true
-          schema:
-            $ref: "#/definitions/Post"
+        - in: formData
+          name: photo
+          type: file
       security:
         - bearerAuth: []
       responses:

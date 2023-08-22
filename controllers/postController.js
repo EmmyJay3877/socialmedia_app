@@ -5,20 +5,50 @@ const Like = require('../model/Like');
 const customError = require('../utils/customError');
 const Redis = require('redis');
 const redisClient = Redis.createClient();
+const cloudinary = require('cloudinary').v2;
+
+const CLOUD_NAME = process.env.CLOUD_NAME
+const API_KEY = process.env.API_KEY
+const API_SECRET = process.env.API_SECRET
+const SECURE = process.env.SECURE
+
+cloudinary.config({
+    cloud_name: CLOUD_NAME,
+    api_key: API_KEY,
+    api_secret: API_SECRET,
+    secure: SECURE
+});
 
 redisClient.connect();
 
 const EXPIRATION = 20
 
 const createPost = async (req, res) => {
-    const { text, image } = req.body;
+    const { text } = req.body;
     if (!text) throw new customError('Post is empty', 400);
+
+    let imageUrl
+
+    const image = req.files.photo;
+
+    const options = {
+        public_id: image.name
+    };
+
+    if (image && /^image/.test(image.mimetype)) {
+        try {
+            const { secure_url } = await cloudinary.uploader.upload(image.tempFilePath, options);
+            imageUrl = secure_url;
+        } catch (error) {
+            throw new customError('Could not upload photo, check your network settings', 500);
+        }
+    };
 
     // create a new post
     const newPost = await Post.create({
         "profile": req.user._id,
         "text": text,
-        "image": image
+        "image": imageUrl
     });
 
     if (newPost) {
