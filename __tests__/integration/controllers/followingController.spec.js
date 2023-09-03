@@ -80,14 +80,13 @@ describe('testing verifyJWT middleware and protected endpoint(/following)', () =
         mockFollowing.followerId = user1.id;
         mockFollowing.followingId = user2.id;
 
-        const follow = await Following.create(mockFollowing);
+        await Following.create(mockFollowing);
 
         jwt.verify.mockReturnValueOnce({ username: user1.username });
 
         const response = await supertest(app)
-            .delete('/following')
+            .delete(`/following/${user2.id}`)
             .set('Authorization', 'Bearer valid-token')
-            .send({ "followId": follow.id })
 
         expect(response.status).toBe(200);
         expect(response.body.success).not.toBeNull();

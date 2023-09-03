@@ -3,6 +3,7 @@ const User = require('../../../model/User');
 const Comment = require('../../../model/Comment');
 const Like = require('../../../model/Like');
 const Redis = require('redis');
+const cloudinary = require('cloudinary').v2;
 const { createPost, getAllPosts, getPost, getPostComments, getUserPosts, deletePost } = require('../../../controllers/postController');
 
 jest.mock('../../../model/Post');
@@ -22,6 +23,7 @@ jest.mock('redis', (() => {
         createClient: jest.fn().mockReturnValue(redisClient)
     }
 }))
+jest.mock('cloudinary');
 
 
 describe('postController', () => {
@@ -44,7 +46,14 @@ describe('postController', () => {
             },
             user: {
                 _id: 1,
-                username: 'john'
+                username: 'john',
+                id: 1
+            },
+            files: {
+                photo: {
+                    name: 'test_image',
+                    mimetype: 'image/jpeg'
+                }
             }
         };
 
@@ -81,6 +90,10 @@ describe('postController', () => {
 
         it('should create a new post, update the post array in the user document and send status 201.', async () => {
 
+            cloudinary.config.mockReturnValue(true);
+
+            cloudinary.uploader.upload.mockResolvedValueOnce({ secure_url: 'test_url' });
+
             Post.create.mockResolvedValueOnce(newPost);
 
             User.updateOne.mockResolvedValueOnce(userUpdate);
@@ -90,7 +103,6 @@ describe('postController', () => {
             expect(mockRes.status).toHaveBeenCalledWith(201);
 
             expect(mockRes.json).toHaveBeenCalledWith({ "success": `${mockReq.user.username} just made a post` });
-
         });
     });
 

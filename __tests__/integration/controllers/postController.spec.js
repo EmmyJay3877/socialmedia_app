@@ -91,6 +91,7 @@ describe('testing verifyJWT middleware and protected endpoint(/posts)', () => {
     it('should delete a post', async () => {
 
         mockPost.text = 'testPost3';
+        mockPost.profile = user.id
 
         const post = await Post.create(mockPost);
 

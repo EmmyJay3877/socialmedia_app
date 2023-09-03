@@ -29,13 +29,14 @@ const createPost = async (req, res) => {
 
     let imageUrl
 
-    const image = req.files.photo;
-
-    const options = {
-        public_id: image.name
-    };
+    const image = req.files?.photo;
 
     if (image && /^image/.test(image.mimetype)) {
+
+        const options = {
+            public_id: image.name
+        };
+
         try {
             const { secure_url } = await cloudinary.uploader.upload(image.tempFilePath, options);
             imageUrl = secure_url;
@@ -156,7 +157,7 @@ const getUserPosts = async (req, res) => {
 const deletePost = async (req, res, next) => {
     if (!req?.params?.id) throw new customError('Post id is required', 403);
 
-    const post = await Post.findOne({ _id: req.params.id }).exec();
+    const post = await Post.findOne({ _id: req.params.id, profile: req.user.id }).exec();
     if (!post) throw new customError(`No Post matches ID ${req.params.id}`, 404);
 
     // delete all the comments document related to this post

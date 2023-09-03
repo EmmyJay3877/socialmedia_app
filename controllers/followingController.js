@@ -12,10 +12,10 @@ const createFollowing = async (req, res) => {
     const { followingId } = req.body;
     if (!followingId) throw new CustomError('Bad Request', 403);
 
-    const follow = await Following.findOne({ followingId }).exec();
-    if (follow && (follow.followerId.toString() === req.user.id)) {
-        throw new CustomError("You can't follow a user twice", 403)
-    };
+    const user = await User.findOne({ _id: followingId }).exec();
+    user.followers.forEach(follower => {
+        if (follower.toString() === req.user.id) throw new CustomError("You can't follow a user twice", 403)
+    });
 
     const newFollowing = await Following.create({
         "followerId": req.user.id, //user that followed
@@ -79,8 +79,8 @@ const deleteFollowing = async (req, res) => {
     const followingId = req.params.id;
     if (!followingId) throw new CustomError('Bad Request', 403);
 
-    const follow = await Following.findOne({ followingId }).exec();
-    if (!follow) throw new CustomError(`No Follow matches ID ${follow._id}`, 404);
+    const follow = await Following.findOne({ followerId: req.user.id, followingId }).exec();
+    if (!follow) throw new CustomError(`No Follow matches ID ${req.params.id}`, 404);
 
     const result = follow.deleteOne();
 

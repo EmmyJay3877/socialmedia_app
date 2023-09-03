@@ -151,6 +151,7 @@ describe('testing verifyJWT middleware and protected endpoint(/comments)', () =>
     it('should delete a comment', async () => {
 
         mockComment.postId = post.id;
+        mockComment.profileId = user.id
 
         const comment = await Comment.create(mockComment);
 
@@ -171,6 +172,7 @@ describe('testing verifyJWT middleware and protected endpoint(/comments)', () =>
         const comment = await Comment.create(mockComment);
 
         mockComment.postId = comment.id
+        mockComment.profileId = user.id
 
         const reply = await Comment.create(mockComment)
 

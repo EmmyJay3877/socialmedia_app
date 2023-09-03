@@ -8,8 +8,8 @@ const commentSchema = new Schema({
         required: true
     },
     profileId: { type: Schema.Types.ObjectId, ref: 'User' },
-    likes: [{ type: Schema.Types.ObjectId, ref: 'Like' }],
+    likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     replies: [{ type: Schema.Types.ObjectId, ref: 'Comment' }]
-}, {timestamps: true})
+}, { timestamps: true })
 
 module.exports = mongoose.model('Comment', commentSchema);

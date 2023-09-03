@@ -103,18 +103,15 @@ describe('testing verifyJWT middleware and protected endpoint(/likes)', () => {
     it('should unlike a post', async () => {
 
         mockLike.postId = post.id;
+        mockLike.profileId = user._id
 
-        const like = await Like.create(mockLike);
+        await Like.create(mockLike);
 
         jwt.verify.mockReturnValueOnce({ username: user.username });
 
         const response = await supertest(app)
-            .delete(`/likes`)
+            .delete(`/likes/${post.id}`)
             .set('Authorization', 'Bearer valid-token')
-            .send({
-                "likeId": like.id,
-                "postId": post.id,
-            })
 
         expect(response.status).toBe(200);
         expect(response.body.success).not.toBeNull();
@@ -123,18 +120,15 @@ describe('testing verifyJWT middleware and protected endpoint(/likes)', () => {
     it('should unlike a comment or reply', async () => {
 
         mockLike.postId = comment.id;
+        mockLike.profileId = user._id
 
-        const like = await Like.create(mockLike);
+        await Like.create(mockLike);
 
         jwt.verify.mockReturnValueOnce({ username: user.username });
 
         const response = await supertest(app)
-            .delete(`/comments/comment/likes`)
+            .delete(`/comments/comment/likes/${comment.id}`)
             .set('Authorization', 'Bearer valid-token')
-            .send({
-                "likeId": like.id,
-                "postId": comment.id,
-            })
 
         expect(response.status).toBe(200);
         expect(response.body.success).not.toBeNull();

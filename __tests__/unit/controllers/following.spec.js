@@ -4,6 +4,19 @@ const { createFollowing, deleteFollowing } = require('../../../controllers/follo
 
 jest.mock('../../../model/Following');
 jest.mock('../../../model/User');
+jest.mock('redis', (() => {
+    const redisClient = {
+        connect: jest.fn(),
+        get: jest.fn(),
+        setEx: jest.fn().mockReturnValue(true),
+        exists: jest.fn(),
+        del: jest.fn()
+    }
+
+    return {
+        createClient: jest.fn().mockReturnValue(redisClient)
+    }
+}))
 
 describe('followingController', () => {
 
@@ -22,6 +35,9 @@ describe('followingController', () => {
             user: {
                 id: 1,
                 username: 'john',
+            },
+            params: {
+                id: 1
             }
         };
 
@@ -44,7 +60,31 @@ describe('followingController', () => {
             await expect(createFollowing(mockReq, mockRes)).rejects.toThrow('Bad Request');
         });
 
+        it('should throw an error if user tries to follow twice', async () => {
+            const user = {
+                "id": 1,
+                followers: [1, 2]
+            }
+
+            User.findOne.mockImplementationOnce(() => ({
+                exec: jest.fn().mockResolvedValue(user)
+            }));
+
+            mockReq.user.id = '1'
+
+            await expect(createFollowing(mockReq, mockRes)).rejects.toThrow("You can't follow a user twice");
+        });
+
         it('should create a new following', async () => {
+
+            const user = {
+                "id": 1,
+                followers: [2]
+            }
+
+            User.findOne.mockImplementationOnce(() => ({
+                exec: jest.fn().mockResolvedValue(user)
+            }));
 
             const newFollowing = {
                 "followerId": 1, //user that followed
@@ -78,7 +118,7 @@ describe('followingController', () => {
 
         it('should throw an error if req.body is empty', async () => {
 
-            mockReq.body = {};
+            mockReq.params = {};
 
             await expect(deleteFollowing(mockReq, mockRes)).rejects.toThrow('Bad Request');
         });
@@ -89,7 +129,7 @@ describe('followingController', () => {
                 exec: jest.fn().mockResolvedValue(null)
             }));
 
-            await expect(deleteFollowing(mockReq, mockRes)).rejects.toThrow(`No Follow matches ID ${mockReq.body.followId}`);
+            await expect(deleteFollowing(mockReq, mockRes)).rejects.toThrow(`No Follow matches ID ${mockReq.params.id}`);
         });
 
         it('should delete a follow', async () => {

@@ -14,8 +14,7 @@ const createLike = async (req, res) => {
     const { postId } = req.body;
     if (!postId) throw new CustomError('Like is empty', 403);
 
-    const like = await Like.findOne({ postId }).exec();
-    if (like && (like.profileId.toString() === req.user.id)) throw new CustomError("You can't like twice", 403);
+    await checkRepeatedLike(postId, req.user.id, req);
 
     const newLike = await Like.create({
         // postId can either be the Id of a comment, post or reply.
@@ -27,21 +26,21 @@ const createLike = async (req, res) => {
         // if it is a reply
         if (req.url.includes('/reply/likes')) {
             // updating the like array in the reply document
-            const replyUpdate = await Comment.updateOne({ _id: postId }, { $push: { likes: { $each: [newLike._id] } } })
+            const replyUpdate = await Comment.updateOne({ _id: postId }, { $push: { likes: { $each: [req.user.id] } } })
 
             if (replyUpdate.matchedCount > 0 && replyUpdate.modifiedCount > 0) {
                 res.status(201).json({ "success": `${req.user.username} just liked a reply` });
             }
         } else if (req.url.includes('/comment/likes')) { // if it is a comment
             // updating the like array in the comment document
-            const commentUpdate = await Comment.updateOne({ _id: postId }, { $push: { likes: { $each: [newLike._id] } } })
+            const commentUpdate = await Comment.updateOne({ _id: postId }, { $push: { likes: { $each: [req.user.id] } } })
 
             if (commentUpdate.matchedCount > 0 && commentUpdate.modifiedCount > 0) {
                 res.status(201).json({ "success": `${req.user.username} just liked a comment` });
             }
         } else { // if it is a post
             // updating the like array in the post document
-            const postUpdate = await Post.updateOne({ _id: postId }, { $push: { likes: { $each: [newLike._id] } } })
+            const postUpdate = await Post.updateOne({ _id: postId }, { $push: { likes: { $each: [req.user.id] } } })
 
             // checking if the Post document was updated
             if (postUpdate.matchedCount > 0 && postUpdate.modifiedCount > 0) {
@@ -50,6 +49,25 @@ const createLike = async (req, res) => {
         }
     }
 }
+
+const checkRepeatedLike = async (postId, userId, req) => {
+    if (req.url.includes('/reply/likes')) {
+        const reply = await Comment.findOne({ _id: postId }).exec();
+        reply.likes.forEach(like => {
+            if (like.toString() === userId) throw new CustomError("You can't like a reply twice", 403)
+        });
+    } else if (req.url.includes('/comment/likes')) {
+        const comment = await Comment.findOne({ _id: postId }).exec();
+        comment.likes.forEach(like => {
+            if (like.toString() === userId) throw new CustomError("You can't like a comment twice", 403)
+        });
+    } else {
+        const post = await Post.findOne({ _id: postId }).exec();
+        post.likes.forEach(like => {
+            if (like.toString() === userId) throw new CustomError("You can't like a post twice", 403)
+        });
+    }
+};
 
 const getTotalLikes = async (req, res) => { // on a post
     const postId = req.params.id;
@@ -76,7 +94,7 @@ const deleteLike = async (req, res) => {
     const postId = req.params.id;
     if (!postId) throw new CustomError('Bad Request', 403);
 
-    const like = await Like.findOne({ postId }).exec();
+    const like = await Like.findOne({ postId, profileId: req.user.id }).exec();
     if (!like) throw new CustomError(`Like was not found`, 404);
 
     // delete a like

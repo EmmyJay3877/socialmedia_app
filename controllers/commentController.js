@@ -143,7 +143,7 @@ const getTotalReplies = async (req, res) => {
 const deleteComment = async (req, res) => {
     if (!req?.params?.id) throw new Error('Bad Request');
 
-    const comment = await Comment.findOne({ _id: req.params.id }).exec();
+    const comment = await Comment.findOne({ _id: req.params.id, profileId: req.user.id }).exec();
     if (!comment) throw new Error(`No Comment matches ID ${req.params.id}`);
 
     // delete a comment/reply
