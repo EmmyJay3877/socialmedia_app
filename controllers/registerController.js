@@ -1,6 +1,7 @@
 const User = require('../model/User');
 const customError = require('../utils/customError');
 const createRefreshAndAccessToken = require('../utils/createToken');
+const nodemailer = require('../utils/nodemailer');
 
 
 const handleNewUser = async (req, res) => {
@@ -32,13 +33,22 @@ const handleNewUser = async (req, res) => {
     );
 
     if (result) {
-        // Creates secure httpOnly cookie with refresh token
-        res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }); // add sameSite: 'None', secure: true before production. or when implementing the frontend.
 
-        res.status(201).json({
-            "message": `New User ${username} created.`,
-            accessToken
-        });
+        try {
+            const info = await nodemailer.registrationMail(email, username);
+            if (info.messageId) {
+                // Creates secure httpOnly cookie with refresh token
+                res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }); // add sameSite: 'None', secure: true before production. or when implementing the frontend.
+
+                res.status(201).json({
+                    "message": `New User ${username} created.`,
+                    accessToken
+                });
+            }
+        } catch (error) {
+            await newUser.deleteOne();
+            throw new customError('Failed to create account, pls try again.', 500);
+        }
     };
 };
 

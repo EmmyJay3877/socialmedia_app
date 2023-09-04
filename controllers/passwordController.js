@@ -1,7 +1,8 @@
 const User = require('./../model/User');
 const customError = require('../utils/customError');
-const sendEmail = require('../utils/email');
+// const sendEmail = require('../utils/email');
 const crypto = require('crypto');
+const nodemailer = require('../utils/nodemailer');
 
 
 const forgetPassword = async (req, res, next) => {
@@ -19,13 +20,12 @@ const forgetPassword = async (req, res, next) => {
     const message = `Forgot your passowrd? Submt a PATCH request with your new password and passwordConfirm to: ${resetUrl}.\nIf you didn't forget your password, please ignore this email!`;
 
     try {
-        await sendEmail({
-            email: user.email,
-            subject: 'Your password reset Token is only valid for 10mins',
-            message
-        });
-
-        res.status(200).json({ 'message': 'Token sent to email!' });
+        let userEmail = user.email;
+        let userName = user.username;
+        const info = await nodemailer.resetPasswordMail(userEmail, userName, resetToken);
+        if (info.messageId) {
+            res.status(200).json({ 'message': 'Token sent to email!' });
+        };
     } catch (error) {
         user.passwordResetToken = undefined;
         user.passwordResetExpires = undefined;
