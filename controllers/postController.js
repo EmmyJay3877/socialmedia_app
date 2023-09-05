@@ -4,7 +4,9 @@ const Comment = require('../model/Comment');
 const Like = require('../model/Like');
 const customError = require('../utils/customError');
 const Redis = require('redis');
-const redisClient = Redis.createClient();
+const redisClient = Redis.createClient({
+    url: process.env.REDIS_URL
+});
 const cloudinary = require('cloudinary').v2;
 
 const CLOUD_NAME = process.env.CLOUD_NAME

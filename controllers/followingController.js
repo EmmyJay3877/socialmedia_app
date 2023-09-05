@@ -2,7 +2,9 @@ const Following = require('../model/Following');
 const User = require('../model/User');
 const CustomError = require('../utils/customError');
 const Redis = require('redis');
-const redisClient = Redis.createClient();
+const redisClient = Redis.createClient({
+    url: process.env.REDIS_URL
+});
 
 redisClient.connect();
 
