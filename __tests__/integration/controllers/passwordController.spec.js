@@ -1,9 +1,14 @@
 const supertest = require('supertest');
 const User = require('../../../model/User');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('../../../utils/nodemailer');
 
 const app = require('../../../main');
 const { dropDB, connectDB } = require('../../../.jest/mockdbConn');
+
+jest.mock('../../../utils/nodemailer', () => ({
+    resetPasswordMail: jest.fn()
+}));
 
 jest.mock('jsonwebtoken', () => ({
     verify: jest.fn()
@@ -25,8 +30,6 @@ jest.mock('redis', (() => {
 }));
 
 jest.mock('./../../../config/dbConn', (() => jest.fn().mockReturnValue(true)));
-
-jest.mock('../../../utils/email', (() => jest.fn().mockReturnValue(true)));
 
 describe('testing logout endpoint(/logout)', () => {
     let mockData;
@@ -57,6 +60,12 @@ describe('testing logout endpoint(/logout)', () => {
     });
 
     it('should send reset password link to the provided email.', async () => {
+
+        let info = {
+            messageId: 1
+        }
+
+        nodemailer.resetPasswordMail.mockReturnValueOnce(info);
 
         const response = await supertest(app)
             .post('/forgetPassword')

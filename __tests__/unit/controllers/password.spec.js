@@ -1,10 +1,14 @@
 const { forgetPassword, resetPassword } = require('../../../controllers/passwordController');
 const User = require('../../../model/User');
 const sendEmail = require('../../../utils/email');
+const nodemailer = require('../../../utils/nodemailer');
 const crypto = require('crypto');
 
 jest.mock('../../../model/User');
 jest.mock('../../../utils/email');
+jest.mock('../../../utils/nodemailer', () => ({
+    resetPasswordMail: jest.fn()
+}));
 
 
 describe('forgetPassword', () => {
@@ -56,6 +60,12 @@ describe('forgetPassword', () => {
     });
 
     it('get user based on the posted email, generate a random token, send the token back as an email and return a response status 200', async () => {
+
+        let info = {
+            messageId: 1
+        }
+
+        nodemailer.resetPasswordMail.mockReturnValueOnce(info);
 
         User.findOne.mockImplementationOnce(() => ({
             exec: jest.fn().mockResolvedValueOnce(user)

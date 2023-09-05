@@ -1,7 +1,11 @@
 const supertest = require('supertest');
-
+const nodemailer = require('../../../utils/nodemailer');
 const app = require('../../../main');
 const { dropDB, connectDB } = require('../../../.jest/mockdbConn');
+
+jest.mock('../../../utils/nodemailer', () => ({
+    registrationMail: jest.fn()
+}));
 
 jest.mock('redis', (() => {
     const redisClient = {
@@ -46,6 +50,12 @@ describe('testing logout endpoint(/logout)', () => {
     });
 
     it('should register a user', async () => {
+
+        let info = {
+            messageId: 1
+        }
+
+        nodemailer.registrationMail.mockReturnValueOnce(info);
 
         const response = await supertest(app)
             .post('/register')

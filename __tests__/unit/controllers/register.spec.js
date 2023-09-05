@@ -1,9 +1,13 @@
 const { handleNewUser } = require('../../../controllers/registerController');
 const User = require('../../../model/User');
 const createRefreshAndAccessToken = require('../../../utils/createToken');
+const nodemailer = require('../../../utils/nodemailer');
 
 jest.mock('../../../model/User');
 jest.mock('../../../utils/createToken');
+jest.mock('../../../utils/nodemailer', () => ({
+    registrationMail: jest.fn()
+}));
 
 describe('Register new user', () => {
     // fake request
@@ -27,7 +31,8 @@ describe('Register new user', () => {
         email: 'validEmail',
         password: "validPassword",
         passwordConfirm: "validPasswordConfirm",
-        role: 'validRole'
+        role: 'validRole',
+        deleteOne: jest.fn()
     };
 
     // tokens
@@ -80,6 +85,7 @@ describe('Register new user', () => {
             exec: jest.fn().mockResolvedValueOnce(null)
         }));
 
+
         //  therefore create new user
         User.create.mockResolvedValueOnce(user);
 
@@ -90,6 +96,12 @@ describe('Register new user', () => {
             user.refreshToken = tokens.refreshToken;
             return user
         });
+
+        let info = {
+            messageId: 1
+        }
+
+        nodemailer.registrationMail.mockReturnValueOnce(info);
 
         await handleNewUser(mockReq, mockRes);
 
