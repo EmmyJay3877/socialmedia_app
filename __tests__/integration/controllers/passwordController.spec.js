@@ -84,8 +84,8 @@ describe('testing logout endpoint(/logout)', () => {
         await user.save({ validateBeforeSave: false });
 
         const response = await supertest(app)
-            .put(`/resetPassword/${resetToken}`)
-            .set('Authorization', 'Bearer valid-token')
+            .put(`/resetPassword`)
+            .set('Cookie', [`token=${resetToken}`])
             .send({
                 "password": mockUser.password,
                 "passwordConfirm": mockUser.passwordConfirm,

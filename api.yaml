@@ -82,14 +82,13 @@ paths:
         200:
           description: OK
 
-  /resetPassword/{token}:
+  /resetPassword:
     put:
       summary: Reset forgotten Password
-      description: Use the forgetPassword route above to send a token in your registered email address
+      description: Use the forgetPassword route above to send a token to your registered email address
       operationId: ResetPassword
       tags: [Users]
       parameters:
-        - $ref: "#/parameters/tokenParam"
         - in: body
           name: passwordReset
           required: true

@@ -27,8 +27,6 @@ jest.mock('redis', (() => {
 
 jest.mock('./../../../config/dbConn', (() => jest.fn().mockReturnValue(true)));
 
-jest.mock('../../../utils/email', (() => jest.fn().mockReturnValue(true)));
-
 describe('testing logout endpoint(/refresh)', () => {
     let mockData;
     let mockUser;

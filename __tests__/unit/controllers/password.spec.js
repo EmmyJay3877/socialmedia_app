@@ -1,11 +1,9 @@
 const { forgetPassword, resetPassword } = require('../../../controllers/passwordController');
 const User = require('../../../model/User');
-const sendEmail = require('../../../utils/email');
 const nodemailer = require('../../../utils/nodemailer');
 const crypto = require('crypto');
 
 jest.mock('../../../model/User');
-jest.mock('../../../utils/email');
 jest.mock('../../../utils/nodemailer', () => ({
     resetPasswordMail: jest.fn()
 }));
@@ -42,7 +40,8 @@ describe('forgetPassword', () => {
         // add mock status and json function into our mock response before each test 
         mockRes = {
             status: jest.fn().mockReturnThis(),
-            json: jest.fn()
+            json: jest.fn(),
+            cookie: jest.fn()
         };
     });
 
@@ -71,8 +70,6 @@ describe('forgetPassword', () => {
             exec: jest.fn().mockResolvedValueOnce(user)
         }));
 
-        sendEmail.mockResolvedValueOnce(true);
-
         await forgetPassword(mockReq, mockRes, next);
 
         expect(mockRes.status).toHaveBeenCalledWith(200);
@@ -83,8 +80,6 @@ describe('forgetPassword', () => {
         User.findOne.mockImplementationOnce(() => ({
             exec: jest.fn().mockResolvedValueOnce(user)
         }));
-
-        sendEmail.mockRejectedValueOnce(new Error);
 
         await expect(forgetPassword(mockReq, mockRes, next)).rejects.toThrow('There was an error sending the email, try again later!');
     });
@@ -130,7 +125,17 @@ describe('resetPassword', () => {
         jest.clearAllMocks();
     });
 
+    it('should throw an error if token does not exist', async () => {
+        mockReq.cookies = {};
+
+        await expect(resetPassword(mockReq, mockRes, next)).rejects.toThrow('Token has expired');
+    });
+
     it('should get user based on token and throw an error if there is no user or token is invalid or expired', async () => {
+
+        mockReq.cookies = {
+            token: "token"
+        }
 
         jest.spyOn(crypto, 'createHash').mockImplementationOnce(() => ({
             update: jest.fn().mockReturnThis(),
@@ -145,6 +150,10 @@ describe('resetPassword', () => {
     });
 
     it('should get user based on token, accept new password if token has not expired and delete reset token', async () => {
+
+        mockReq.cookies = {
+            token: "token"
+        }
 
         jest.spyOn(crypto, 'createHash').mockImplementationOnce(() => ({
             update: jest.fn().mockReturnThis(),

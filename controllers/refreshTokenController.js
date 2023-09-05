@@ -6,7 +6,7 @@ const customError = require('./../utils/customError');
 
 const handleRefresh = async (req, res) => {
     const cookies = req.cookies;
-    if (!cookies?.jwt) throw new customError('Unauthorized', 401); // use cookies?.jwt
+    if (!cookies?.jwt) throw new customError('Unauthorized', 401);
     const refreshToken = cookies.jwt;
 
     const foundUser = await User.findOne({ refreshToken }).exec();

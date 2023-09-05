@@ -10,13 +10,13 @@ let mailGenerator = new Mailgen({
 });
 
 let config = {
-    host: "smtp.gmail.com",
-    service: "Gmail",
-    port: 465,
+    host: process.env.EMAIL_HOST,
+    service: process.env.EMAIL_SERVICE,
+    port: process.env.EMAIL_PORT,
     secure: true,
     auth: {
-        user: process.env.GMAIL_USERNAME,
-        pass: process.env.PASSWORD,
+        user: process.env.EMAIL_USERNAME,
+        pass: process.env.EMAIL_PASSWORD,
     }
 };
 
@@ -31,8 +31,8 @@ const organizeRegistrationMail = (username) => {
                 instructions: 'To continue using the api, please click here to get verifed:',
                 button: {
                     color: '#22BC66', // Optional action button color
-                    text: 'Confirm your account',
-                    link: 'https://mailgen.js/confirm?s=d9729feb74992cc3482b350163a1a010'
+                    text: 'Confirm your account and Login',
+                    link: 'http://localhost:8000/api-docs/#/Users/Login'
                 }
             },
             outro: 'Need help, or have questions? Just reply to this email, we\'d love to help.'
@@ -44,13 +44,18 @@ const organizeRegistrationMail = (username) => {
     return emailBody;
 }
 
-const organizeResetPasswordMail = (username, resetToken) => {
+const organizeResetPasswordMail = (username) => {
     const emailFmt = {
         body: {
             name: username,
             intro: 'You have received this email because a password reset request for your account was received.',
             action: {
-                instructions: `Copy this reset token: ${resetToken}`,
+                instructions: 'Click the button below to reset your password:',
+                button: {
+                    color: '#DC4D2F',
+                    text: 'Reset your password',
+                    link: `http://localhost:8000/api-docs/#/Users/ResetPassword`
+                }
             },
             outro: 'If you did not request a password reset, no further action is required on your part.'
         }
@@ -77,14 +82,14 @@ async function registrationMail(email, username) {
     return info;
 };
 
-async function resetPasswordMail(email, username, resetToken) {
-    // const emailBody = organizeResetPasswordMail(username, resetToken);
+async function resetPasswordMail(email, username) {
+    const emailBody = organizeResetPasswordMail(username);
 
     const message = {
         from: process.env.USERNAME,
         to: email,
         subject: "Password Reset ✔",
-        text: `Copy this reset token: ${resetToken}`
+        text: emailBody
     }
 
     const info = await transporter.sendMail(message);
