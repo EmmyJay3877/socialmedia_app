@@ -32,7 +32,7 @@ const organizeRegistrationMail = (username) => {
                 button: {
                     color: '#22BC66', // Optional action button color
                     text: 'Confirm your account and Login',
-                    link: 'http://localhost:8000/api-docs/#/Users/Login'
+                    link: `${process.env.HOST_URL}/api-docs/#/Users/Login`
                 }
             },
             outro: 'Need help, or have questions? Just reply to this email, we\'d love to help.'
@@ -54,7 +54,7 @@ const organizeResetPasswordMail = (username) => {
                 button: {
                     color: '#DC4D2F',
                     text: 'Reset your password',
-                    link: `http://localhost:8000/api-docs/#/Users/ResetPassword`
+                    link: `${process.env.HOST_URL}/api-docs/#/Users/ResetPassword`
                 }
             },
             outro: 'If you did not request a password reset, no further action is required on your part.'
