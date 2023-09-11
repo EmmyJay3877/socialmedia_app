@@ -6,6 +6,12 @@ This is a backend server for a social media app, where users can create and like
 This app is built with Node.js and Express.js. It provides APIs to handle user authentication, blog post creation, comments, likes, and follows. The server uses MongoDB as the database for storing user data and blog posts.
 
 
+## 🚀 API Documentation
+
+You can find the API documentation for this project in the Swagger UI:
+
+[API Documentation](https://blogapp-api-pdde.onrender.com/api-docs/#/)
+
 
 ## 🧐 Features
 
